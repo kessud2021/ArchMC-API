@@ -1,4 +1,3 @@
-# archmc_dashboard.py
 import os
 from datetime import datetime, timedelta
 from fastapi import FastAPI, HTTPException, Query
@@ -60,7 +59,7 @@ async def fetch_from_arch(endpoint: str, params: dict = None):
         return resp.json()
 
 # ---------------------
-# Process player data for display
+# Process player data
 # ---------------------
 def process_player_data(username, data):
     highlights = []
@@ -155,11 +154,10 @@ async def home():
         input, button, select { padding:0.5rem; margin:0.3rem; border-radius:6px; border:1px solid #ccc; }
         .stats-section { margin-top:2rem; padding:1rem; background:#fff; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1);}
         table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
-        table, th, td { border:1px solid #aaa; padding: 5px; text-align: left; }
+        table, th, td { border:1px solid #aaa; padding: 5px; text-align: left; vertical-align: top; }
         th { background:#eee; }
-        .collapsible { cursor:pointer; background:#eee; padding:5px; margin-top:5px; border-radius:4px; }
-        .content { display:none; margin-left:20px; padding:5px; }
         label { display:block; margin-top:10px; font-weight:bold; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
     </style>
     </head>
     <body>
@@ -202,10 +200,17 @@ async def home():
             }
         }
 
-        async function fetchJSON(url){
-            const res = await fetch(url);
-            if(!res.ok) throw new Error(await res.text());
-            return await res.json();
+        function generateTable(obj){
+            if(typeof obj !== "object" || obj === null) return obj;
+            let html = "<table><tr><th>Key</th><th>Value</th></tr>";
+            for(const key in obj){
+                let value = obj[key];
+                if(typeof value === "object" && value !== null){
+                    value = generateTable(value);
+                }
+                html += `<tr><td>${key}</td><td>${value}</td></tr>`;
+            }
+            return html + "</table>";
         }
 
         async function fetchData(){
@@ -231,8 +236,9 @@ async def home():
                     url = `/api/leaderboards/${statId}`;
                 }
                 else if(endpoint === "statistics") url = `/api/statistics`;
-                const data = await fetchJSON(url);
-                statsDiv.innerHTML = '<pre>' + JSON.stringify(data,null,2) + '</pre>';
+
+                const data = await fetch(url).then(r=>r.json());
+                statsDiv.innerHTML = generateTable(data);
             } catch(e){
                 statsDiv.innerHTML = '<pre style="color:red">' + e + '</pre>';
             }
