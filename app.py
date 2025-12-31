@@ -254,4 +254,4 @@ async def home():
 # Run server
 # ---------------------
 if __name__ == "__main__":
-    uvicorn.run("archmc_dashboard:app", host="0.0.0.0", port=3000, reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=3000, reload=True)
